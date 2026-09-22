@@ -13,14 +13,10 @@ or correct that prediction.
   frontend, real inference end-to-end, no mocks. See
   [`docs/architecture.md`](docs/architecture.md) and
   [`docs/priority_policy.md`](docs/priority_policy.md).
-- **M3 (Release readiness)** — human-review feedback workflow and Docker
-  Compose are done. GitHub Actions CI is written
-  (`.github/workflows/ci.yml`, tracked in git history) but not yet pushed —
-  the authenticated push account is missing the `workflow` OAuth scope
-  GitHub requires for that specific file; see the M3 PR for status. All
-  four CI jobs it defines have been run manually and pass (see "Test"
-  below). See the M3 issue in the project tracker for the original scope
-  and acceptance criteria.
+- **M3 (Release readiness)** — done. Human-review feedback workflow,
+  Docker Compose, and GitHub Actions CI (`.github/workflows/ci.yml`,
+  running on every PR to `main`). See the M3 issue in the project tracker
+  for the original scope and acceptance criteria.
 
 ## Repository layout
 
@@ -29,7 +25,8 @@ IncidentIQ/
 ├── ml/          # Offline training package (scikit-learn). Never imported by the API at runtime.
 ├── backend/     # FastAPI service — inference, priority policy, feedback, persistence
 ├── frontend/    # Next.js app — submission, prediction display, history, review feedback
-└── docs/        # Architecture, dataset provenance, model card, priority policy
+├── docs/        # Architecture, dataset provenance, model card, priority policy
+└── .github/workflows/ci.yml  # CI: ml/backend/frontend tests + e2e, on every PR to main
 ```
 
 ## Run the whole stack
@@ -91,10 +88,9 @@ cd backend && uv run pytest     # 40 tests
 cd frontend && npm run test:e2e # 10 tests — real browser, real backend, real model, disposable DB
 ```
 
-`.github/workflows/ci.yml` defines four jobs to run all of the above on
-every PR to `main`, plus frontend lint and a production build (which
-includes TypeScript checking) — see the status note above for why it isn't
-active on GitHub yet.
+`.github/workflows/ci.yml` runs all of the above on every PR to `main`,
+plus frontend lint and a production build (which includes TypeScript
+checking).
 
 ## The feedback workflow
 
