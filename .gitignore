@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.uv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ML artifacts & data (large/generated — kept out of git unless explicitly whitelisted)
+ml/data/raw/
+ml/data/interim/
+ml/data/processed/
+ml/artifacts/*
+!ml/artifacts/.gitkeep
+*.pkl
+*.joblib
+
+# Node / frontend
+node_modules/
+.next/
+out/
+
+# Backend
+*.sqlite3
+*.db
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+*.swp
+.vscode/
+.idea/
