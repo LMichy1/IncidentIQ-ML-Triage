@@ -22,6 +22,17 @@ DATABASE_PATH = Path(
 )
 DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
+# Comma-separated. Defaults cover the normal frontend dev port (3000) and
+# the port the Playwright e2e config runs the frontend on (3100) so the
+# committed test suite works out of the box.
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get(
+        "INCIDENTIQ_CORS_ORIGINS", "http://localhost:3000,http://localhost:3100"
+    ).split(",")
+    if origin.strip()
+]
+
 # Heuristic, NOT a statistically validated confidence threshold — see
 # app/ml_runtime.py docstring. Chosen as a conservative placeholder pending
 # calibration against real or higher-fidelity data.
