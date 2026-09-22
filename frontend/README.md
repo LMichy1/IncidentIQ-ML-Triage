@@ -12,7 +12,7 @@ this UI renders.
 ## Run
 
 Requires the backend running (see `../backend/README.md`), which in turn
-requires the M1 model artifact (see `../ml/README`).
+requires the M1 model artifact (see `../ml/README.md`).
 
 ```bash
 cd frontend

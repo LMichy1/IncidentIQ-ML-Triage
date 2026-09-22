@@ -18,7 +18,7 @@ uv run uvicorn app.main:app --reload --port 8000
 ```
 
 Requires the M1 artifact to exist at
-`../ml/artifacts/incident_category_classifier/0.1.0/` (see `../ml/README`).
+`../ml/artifacts/incident_category_classifier/0.1.0/` (see `../ml/README.md`).
 If it's missing, the server still starts, but `GET /ready` reports 503 and
 `POST /api/v1/incidents` returns 503 until the artifact is present.
 
