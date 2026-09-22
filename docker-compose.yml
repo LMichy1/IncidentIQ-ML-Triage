@@ -1,0 +1,38 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - incidentiq-data:/data
+    environment:
+      # Frontend is reachable from the browser at localhost:3000 with the
+      # default port mapping below — this must match wherever the browser
+      # actually loads the frontend from, not a Docker-internal hostname.
+      INCIDENTIQ_CORS_ORIGINS: http://localhost:3000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/ready')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Browser-facing URL — must be reachable from the host running the
+        # browser, hence localhost:8000 (the published backend port), not
+        # the Docker-internal service name "backend".
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  incidentiq-data:

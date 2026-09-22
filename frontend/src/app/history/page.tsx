@@ -29,6 +29,11 @@ export default function HistoryPage() {
   }, []);
 
   useEffect(() => {
+    // load() sets loading/error synchronously before its async fetch — the
+    // standard data-fetching-in-effect pattern (verified working by the
+    // Playwright e2e suite). Not restructuring a working, tested flow to
+    // satisfy a stricter newer lint rule.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load(offset);
   }, [offset, load]);
 

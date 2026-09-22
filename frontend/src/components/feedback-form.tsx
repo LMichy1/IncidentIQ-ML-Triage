@@ -76,7 +76,7 @@ export function FeedbackForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="fb-category">Category</Label>
-          <Select value={category} onValueChange={setCategory}>
+          <Select value={category} onValueChange={(v) => setCategory(v ?? CONFIRM_ORIGINAL)}>
             <SelectTrigger id="fb-category">
               <SelectValue />
             </SelectTrigger>
@@ -95,7 +95,7 @@ export function FeedbackForm({
 
         <div className="space-y-2">
           <Label htmlFor="fb-priority">Priority</Label>
-          <Select value={priority} onValueChange={setPriority}>
+          <Select value={priority} onValueChange={(v) => setPriority(v ?? CONFIRM_ORIGINAL)}>
             <SelectTrigger id="fb-priority">
               <SelectValue />
             </SelectTrigger>
