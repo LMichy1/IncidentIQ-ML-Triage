@@ -182,6 +182,16 @@ def export_artifact(
             "selected_on": "validation macro F1",
             "test_macro_f1": comparison["test_metrics"]["macro_f1"],
             "test_per_class": comparison["test_metrics"]["per_class"],
+            "result_stage": "development",
+            "result_stage_note": (
+                "The dataset generator was redesigned after an earlier version "
+                "produced a meaningless 1.0 macro F1 on both validation AND "
+                "test. Model selection here is still validation-only, but the "
+                "dataset design itself was informed by a prior test score, so "
+                "this test_macro_f1 is a development-stage number, not an "
+                "independent frozen-holdout result. See "
+                "docs/dataset_decision.md#evaluation-independence-caveat-development-stage-result."
+            ),
         },
         "environment": {
             "python_version": platform.python_version(),
