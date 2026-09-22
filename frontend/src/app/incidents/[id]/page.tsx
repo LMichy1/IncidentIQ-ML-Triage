@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
+import { FeedbackForm } from "@/components/feedback-form";
+import { FeedbackHistory } from "@/components/feedback-history";
 import { PredictionCard } from "@/components/prediction-card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError, getIncident, type IncidentResponse } from "@/lib/api";
 
@@ -87,6 +90,31 @@ export default function IncidentDetailPage() {
       </Card>
 
       <PredictionCard incident={incident} />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Human review</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <FeedbackForm
+            incident={incident}
+            onSubmitted={(feedback) =>
+              setIncident((prev) =>
+                prev
+                  ? { ...prev, reviewed: true, feedback: [...prev.feedback, feedback] }
+                  : prev,
+              )
+            }
+          />
+          <Separator />
+          <div>
+            <h3 className="text-sm font-medium mb-2">
+              Review history ({incident.feedback.length})
+            </h3>
+            <FeedbackHistory items={incident.feedback} />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
