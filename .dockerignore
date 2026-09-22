@@ -1,0 +1,18 @@
+# Used by the backend build (context = repo root).
+.git
+**/__pycache__
+**/*.pyc
+**/.venv
+**/*.egg-info
+**/.pytest_cache
+**/*.sqlite3
+
+ml/data/raw
+ml/data/interim
+ml/data/processed
+ml/artifacts
+
+frontend/node_modules
+frontend/.next
+frontend/test-results
+frontend/playwright-report

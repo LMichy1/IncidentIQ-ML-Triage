@@ -16,6 +16,11 @@ IMPACT_LEVELS = ("low", "medium", "high", "critical")
 URGENCY_LEVELS = ("low", "medium", "high", "critical")
 _RANK = {"low": 1, "medium": 2, "high": 3, "critical": 4}
 
+# The full set of values this policy can ever produce — reused to validate
+# a reviewer's corrected_priority in feedback submissions, so a correction
+# can't introduce a priority value the policy itself couldn't have.
+VALID_PRIORITY_VALUES = frozenset({"P1", "P2", "P3", "P4", "undetermined"})
+
 
 @dataclass
 class PriorityResult:

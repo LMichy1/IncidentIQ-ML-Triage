@@ -1,8 +1,9 @@
 # IncidentIQ
 
 Intelligent incident triage: submit a software incident report, get a
-category prediction, an advisory escalation priority, and a clear signal
-for when human review is required.
+category prediction, an advisory escalation priority, a clear signal for
+when human review is required, and a place for a human reviewer to confirm
+or correct that prediction.
 
 ## Status
 
@@ -12,23 +13,30 @@ for when human review is required.
   frontend, real inference end-to-end, no mocks. See
   [`docs/architecture.md`](docs/architecture.md) and
   [`docs/priority_policy.md`](docs/priority_policy.md).
-- **M3 (Release readiness)** — **not started.** No human-review/feedback
-  loop, no Docker, no CI. See the M3 issue in the project tracker for scope.
+- **M3 (Release readiness)** — human-review feedback workflow and Docker
+  Compose are done. GitHub Actions CI is written
+  (`.github/workflows/ci.yml`, tracked in git history) but not yet pushed —
+  the authenticated push account is missing the `workflow` OAuth scope
+  GitHub requires for that specific file; see the M3 PR for status. All
+  four CI jobs it defines have been run manually and pass (see "Test"
+  below). See the M3 issue in the project tracker for the original scope
+  and acceptance criteria.
 
 ## Repository layout
 
 ```
 IncidentIQ/
 ├── ml/          # Offline training package (scikit-learn). Never imported by the API at runtime.
-├── backend/     # FastAPI service — inference, priority policy, persistence
-├── frontend/    # Next.js app — submission, prediction display, history
+├── backend/     # FastAPI service — inference, priority policy, feedback, persistence
+├── frontend/    # Next.js app — submission, prediction display, history, review feedback
 └── docs/        # Architecture, dataset provenance, model card, priority policy
 ```
 
 ## Run the whole stack
 
-Three terminals, in this order (each has its own `README.md` with more
-detail):
+### Option A: locally, three terminals (in this order)
+
+Each subproject has its own `README.md` with more detail.
 
 ```bash
 # 1. ML — produces the artifact the backend loads
@@ -49,16 +57,59 @@ cp .env.local.example .env.local
 npm run dev
 ```
 
-Open `http://localhost:3000`. There is no Docker Compose setup yet — this
-is a real limitation (see "Known limitations" below), not an oversight.
+Open `http://localhost:3000`.
+
+### Option B: Docker Compose
+
+```bash
+docker compose build   # builds the model artifact inside the backend image (see backend/Dockerfile) — never at container startup
+docker compose up -d
+```
+
+Open `http://localhost:3000`. `docker compose ps` should show the backend
+as `healthy` (its `/ready` endpoint is the health check). Incident data
+persists in the `incidentiq-data` named volume across `docker compose
+restart`/`down`+`up` — verified directly during development: an incident and
+its feedback survived a real `docker compose restart backend`, confirmed by
+re-fetching them afterward, not just claimed.
+
+`NEXT_PUBLIC_API_BASE_URL` is baked into the frontend's client bundle at
+**build** time and must be reachable from the *browser*, not from inside
+the Docker network — with the default port mapping (backend published on
+`localhost:8000`) the default in `docker-compose.yml` is already correct.
+If you change the backend's published port, pass a matching
+`--build-arg NEXT_PUBLIC_API_BASE_URL=...` (or edit the compose file).
+
+This is a local demonstration setup — no TLS, no authentication. Don't
+expose these containers to the public internet as-is.
 
 ## Test
 
 ```bash
 cd ml && uv run pytest          # 16 tests
-cd backend && uv run pytest     # 29 tests
-cd frontend && npm run test:e2e # 7 tests — real browser, real backend, real model, disposable DB
+cd backend && uv run pytest     # 40 tests
+cd frontend && npm run test:e2e # 10 tests — real browser, real backend, real model, disposable DB
 ```
+
+`.github/workflows/ci.yml` defines four jobs to run all of the above on
+every PR to `main`, plus frontend lint and a production build (which
+includes TypeScript checking) — see the status note above for why it isn't
+active on GitHub yet.
+
+## The feedback workflow
+
+`POST /api/v1/incidents/{id}/feedback` records a human review: confirm or
+correct the predicted category, confirm or correct the priority, an
+optional note, an optional (explicitly unverified — there's no auth)
+reviewer name. Feedback is **append-only** — it never overwrites the
+original prediction or a prior review, so `GET /api/v1/incidents/{id}`
+returns both the untouched original prediction and the full feedback
+history side by side. Submitting feedback does **not** trigger retraining;
+there is no automated pipeline connecting reviewer corrections back into
+the model. See `docs/architecture.md` for the schema and
+`backend/tests/test_feedback.py` for the behavior this guarantees
+(immutability of the original prediction, repeated feedback retained as
+history, safe against a pre-existing/older database).
 
 ## Known limitations
 
@@ -75,13 +126,16 @@ cd frontend && npm run test:e2e # 7 tests — real browser, real backend, real m
 - **Heuristic review threshold.** The 0.20 margin threshold that flags a
   prediction for human review is a documented placeholder, not
   statistically derived.
-- **No human-review/feedback workflow.** The database has `reviewed` /
-  `reviewer_note` columns and the API returns them, but nothing writes to
-  them yet — there is no endpoint or UI to submit feedback. This is M3
-  scope, not implemented.
-- **No authentication, no Docker, no CI.** This is a local-run demo
-  application, not a hardened deployment.
+- **Feedback doesn't feed back.** The workflow captures human corrections,
+  but nothing consumes them yet — no retraining, no drift monitoring, no
+  reviewer-agreement metrics.
+- **No authentication.** Reviewer names in feedback are free text, not a
+  verified identity. This is a local-run demo application, not a hardened
+  deployment — the Docker Compose setup is for local use, not public
+  hosting.
 - **Minor API contract inconsistency:** 422 validation errors use FastAPI's
   default `{"detail": [...]}` shape, while other errors use this project's
   `{"error_code", "detail"}` shape. The frontend client handles both; this
   is a documented rough edge, not a functional bug.
+- **No request body size limit** beyond individual field length caps
+  (a Starlette/FastAPI default gap, not specific to this app).

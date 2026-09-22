@@ -33,6 +33,38 @@ export interface PriorityInfo {
   basis: string;
 }
 
+// Mirrors ml/src/incidentiq_ml/config.py CATEGORIES — keep in sync manually.
+export const CATEGORIES = [
+  "authentication_access",
+  "database_data_integrity",
+  "api_backend_error",
+  "ui_frontend",
+  "performance_latency",
+  "infrastructure_deployment",
+  "third_party_integration",
+  "security_vulnerability",
+] as const;
+
+// Mirrors backend/app/priority_policy.py VALID_PRIORITY_VALUES.
+export const PRIORITY_VALUES = ["P1", "P2", "P3", "P4", "undetermined"] as const;
+
+export interface FeedbackCreate {
+  reviewer_name?: string | null;
+  corrected_category?: string | null;
+  corrected_priority?: string | null;
+  note?: string | null;
+}
+
+export interface FeedbackResponse {
+  id: string;
+  incident_id: string;
+  created_at: string;
+  reviewer_name: string | null;
+  corrected_category: string | null;
+  corrected_priority: string | null;
+  note: string | null;
+}
+
 export interface IncidentResponse {
   id: string;
   created_at: string;
@@ -44,6 +76,7 @@ export interface IncidentResponse {
   priority: PriorityInfo;
   reviewed: boolean;
   reviewer_note: string | null;
+  feedback: FeedbackResponse[];
 }
 
 export interface IncidentListResponse {
@@ -134,4 +167,14 @@ export function getIncident(id: string): Promise<IncidentResponse> {
 
 export function getReadiness(): Promise<ReadinessResponse> {
   return request<ReadinessResponse>("/ready");
+}
+
+export function submitFeedback(
+  incidentId: string,
+  payload: FeedbackCreate,
+): Promise<FeedbackResponse> {
+  return request<FeedbackResponse>(
+    `/api/v1/incidents/${encodeURIComponent(incidentId)}/feedback`,
+    { method: "POST", body: JSON.stringify(payload) },
+  );
 }

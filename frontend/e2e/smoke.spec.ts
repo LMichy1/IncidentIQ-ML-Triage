@@ -66,9 +66,16 @@ test.describe.serial("incident submission -> prediction -> history flow", () => 
   test("history page lists the incidents just submitted, persisted in SQLite", async ({
     page,
   }) => {
-    await page.goto("/history", { waitUntil: "networkidle" });
-    const rows = page.locator("table tbody tr");
-    await expect(rows).toHaveCount(2);
+    await page.goto("/history");
+    // >= 2, not ==2: the backend/DB is shared across spec files in this
+    // config, so other suites (e.g. feedback.spec.ts) may have already
+    // added their own incidents. This test only needs to confirm ITS two
+    // submissions above actually persisted, not that it's the only writer.
+    // expect.poll (not a one-shot count) because the client-side fetch to
+    // /api/v1/incidents happens after networkidle already resolved.
+    await expect
+      .poll(() => page.locator("table tbody tr").count(), { timeout: 15_000 })
+      .toBeGreaterThanOrEqual(2);
   });
 
   test("clicking into history opens the real persisted record", async ({ page }) => {

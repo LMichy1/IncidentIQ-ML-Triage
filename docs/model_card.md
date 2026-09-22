@@ -83,8 +83,10 @@ this project does not have.
   forced into the nearest class rather than flagged as out-of-scope.
 - Priority/severity is out of scope for this model by design — see
   `priority_policy.md`.
-- No feedback loop exists yet to correct or retrain against reviewer
-  corrections (deferred — see the M3 issue in the project tracker).
+- A human-review feedback mechanism exists (M3 — see
+  `docs/architecture.md#feedback-data-model-m3`) and records reviewer
+  corrections, but nothing consumes them: there is no retraining loop,
+  drift monitoring, or reviewer-agreement metric built on top of it yet.
 
 ## Versioning
 

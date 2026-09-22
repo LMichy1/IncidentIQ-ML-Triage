@@ -2,11 +2,25 @@
 
 from __future__ import annotations
 
-from app.models_db import IncidentRecord
-from app.schemas import IncidentResponse, PredictionInfo, PriorityInfo
+from app.models_db import FeedbackRecord, IncidentRecord
+from app.schemas import FeedbackResponse, IncidentResponse, PredictionInfo, PriorityInfo
 
 
-def to_incident_response(record: IncidentRecord) -> IncidentResponse:
+def to_feedback_response(record: FeedbackRecord) -> FeedbackResponse:
+    return FeedbackResponse(
+        id=record.id,
+        incident_id=record.incident_id,
+        created_at=record.created_at,
+        reviewer_name=record.reviewer_name,
+        corrected_category=record.corrected_category,
+        corrected_priority=record.corrected_priority,
+        note=record.note,
+    )
+
+
+def to_incident_response(
+    record: IncidentRecord, feedback: list[FeedbackRecord] = ()
+) -> IncidentResponse:
     return IncidentResponse(
         id=record.id,
         created_at=record.created_at,
@@ -31,4 +45,5 @@ def to_incident_response(record: IncidentRecord) -> IncidentResponse:
         ),
         reviewed=record.reviewed,
         reviewer_note=record.reviewer_note,
+        feedback=[to_feedback_response(f) for f in feedback],
     )

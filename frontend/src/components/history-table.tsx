@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
 import {
@@ -58,7 +58,11 @@ export function HistoryTable({ items }: { items: IncidentResponse[] }) {
               <PriorityBadge priority={incident.priority.priority} />
             </TableCell>
             <TableCell>
-              {incident.prediction.requires_human_review ? (
+              {incident.reviewed ? (
+                <span className="inline-flex items-center gap-1 text-green-700 text-sm">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Reviewed
+                </span>
+              ) : incident.prediction.requires_human_review ? (
                 <span className="inline-flex items-center gap-1 text-amber-600 text-sm">
                   <AlertTriangle className="h-3.5 w-3.5" /> Needed
                 </span>

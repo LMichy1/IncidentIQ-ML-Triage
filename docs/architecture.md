@@ -37,7 +37,10 @@ introduce new components — this is not a speculative design doc.
   the API shape; frontend TypeScript types are kept in sync manually in M1/M2
   (a generated-client step is a candidate M3 improvement, not a blocker now).
 - **No microservices/Kubernetes/Kafka.** Single FastAPI process, single
-  Next.js app, single SQLite file, Docker Compose for local/dev orchestration.
+  Next.js app, single SQLite file, Docker Compose for local/dev
+  orchestration (implemented in M3 — see `docker-compose.yml`).
+- **Feedback is append-only and separate from the prediction it reviews.**
+  See "Feedback data model" below.
 
 ## Artifact contract (`ml` → `backend`)
 
@@ -52,3 +55,29 @@ An exported artifact directory contains:
 
 The backend validates `metadata.json` against an expected schema before
 loading and refuses to start on a mismatch (implemented in M2).
+
+## Feedback data model (M3)
+
+`incident_feedback` is a separate table from `incidents` (`backend/app/models_db.py`),
+one row per review, foreign-keyed to the incident it reviews:
+
+- `corrected_category` / `corrected_priority` are `NULL` when a reviewer
+  confirms the original prediction rather than correcting it.
+- Rows are never updated or deleted by the API — submitting feedback again
+  (same or a different reviewer) always inserts a new row. `GET
+  /api/v1/incidents/{id}` returns the full ordered history, alongside the
+  original, untouched prediction fields on `incidents` — a reviewer's
+  correction is never written back into `predicted_category`, `priority`,
+  etc.
+- `incidents.reviewed` flips to `true` (monotonically — never reset) the
+  first time feedback is recorded; `incidents.reviewer_note` is deprecated
+  as of M3, superseded by the feedback table, and kept only so an existing
+  SQLite file doesn't need a destructive column migration.
+- Adding this table is additive-only via SQLAlchemy's `create_all()` — an
+  existing pre-M3 database upgrades in place with no data loss (verified by
+  hand-constructing a pre-M3-schema SQLite file and confirming the old row
+  and the new endpoint both work against it; see `backend/README.md`).
+- Feedback is read-only input from the backend's perspective: nothing
+  currently consumes it to retrain the model, flag drift, or compute
+  reviewer-agreement metrics. That would be a real, separate feature, not
+  implied by this table's existence.

@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.ml_runtime import PredictionResult
-from app.models_db import IncidentRecord
+from app.models_db import FeedbackRecord, IncidentRecord
 from app.priority_policy import PriorityResult
 
 
@@ -62,3 +62,41 @@ def list_incidents(
     )
     items = list(session.scalars(stmt))
     return items, total
+
+
+def create_feedback(
+    session: Session,
+    *,
+    incident_id: str,
+    reviewer_name: str | None,
+    corrected_category: str | None,
+    corrected_priority: str | None,
+    note: str | None,
+) -> FeedbackRecord:
+    """Assumes the caller has already verified the incident exists. Always
+    inserts a new row — never updates a prior one, so review history
+    (including reviewers disagreeing with each other) is preserved."""
+    feedback = FeedbackRecord(
+        incident_id=incident_id,
+        reviewer_name=reviewer_name,
+        corrected_category=corrected_category,
+        corrected_priority=corrected_priority,
+        note=note,
+    )
+    session.add(feedback)
+
+    incident = session.get(IncidentRecord, incident_id)
+    incident.reviewed = True  # monotonic: once reviewed, always reviewed
+
+    session.commit()
+    session.refresh(feedback)
+    return feedback
+
+
+def list_feedback(session: Session, incident_id: str) -> list[FeedbackRecord]:
+    stmt = (
+        select(FeedbackRecord)
+        .where(FeedbackRecord.incident_id == incident_id)
+        .order_by(FeedbackRecord.created_at.asc())
+    )
+    return list(session.scalars(stmt))
