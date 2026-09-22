@@ -22,11 +22,17 @@ function formatCategory(category: string): string {
     .join(" ");
 }
 
-export function HistoryTable({ items }: { items: IncidentResponse[] }) {
+export function HistoryTable({
+  items,
+  emptyMessage = "No incidents submitted yet.",
+}: {
+  items: IncidentResponse[];
+  emptyMessage?: string;
+}) {
   if (items.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-8 text-center">
-        No incidents submitted yet.
+        {emptyMessage}
       </p>
     );
   }

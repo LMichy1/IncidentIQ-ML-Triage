@@ -17,6 +17,7 @@ from app.schemas import (
     IncidentCreate,
     IncidentListResponse,
     IncidentResponse,
+    ReviewStatusFilter,
 )
 from app.serializers import to_feedback_response, to_incident_response
 
@@ -63,9 +64,12 @@ def submit_incident(
 def list_incidents(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
+    review_status: ReviewStatusFilter = Query(default="all"),
     db: Session = Depends(get_db),
 ) -> IncidentListResponse:
-    records, total = repository.list_incidents(db, limit=limit, offset=offset)
+    records, total = repository.list_incidents(
+        db, limit=limit, offset=offset, review_status=review_status
+    )
     return IncidentListResponse(
         items=[
             to_incident_response(r, repository.list_feedback(db, r.id)) for r in records
@@ -73,6 +77,7 @@ def list_incidents(
         total=total,
         limit=limit,
         offset=offset,
+        review_status=review_status,
     )
 
 
