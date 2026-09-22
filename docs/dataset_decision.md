@@ -123,6 +123,31 @@ so the classification task has genuine ambiguity, closer to how real triage
 disagreements happen. See `CONFUSABLE_PAIRS` in
 [`generate_dataset.py`](../ml/scripts/generate_dataset.py).
 
+## Evaluation-independence caveat (development-stage result)
+
+Being direct about a methodology gap: the first generator version (fully
+disjoint per-category vocabulary) produced a meaningless 1.0 macro F1 on
+**both** validation and test. That test-set score, not just the validation
+score, was part of what triggered the `CONFUSABLE_PAIRS`/`CONFUSION_RATE`
+redesign documented above. Model *selection* was still done on validation
+only (see `train_and_compare` in `ml/src/incidentiq_ml/models/train.py` —
+the winner is picked by validation macro F1, and test is scored exactly once
+against that already-chosen model), so there is no hyperparameter- or
+model-selection leakage. But the *dataset design itself* was iterated after
+observing a test-set result, which is a real, if narrow, violation of strict
+train/val/test independence at the data-generation level.
+
+Practical effect: the reported **0.89 test macro F1 is a development-stage
+number**, not a clean frozen-holdout result. It should not be quoted as a
+final benchmark. The generator design is now fixed and will not be iterated
+further in response to test scores; a genuinely independent number would
+require either a fresh dataset design nobody has evaluated against yet, or
+(more realistically, given the three-day deadline) waiting for the real-data
+path in "Future work" below, where a proper frozen test split can be held
+out before any model or generator iteration happens. M2's API and frontend
+must present this number as illustrative-only, never as a production
+accuracy claim.
+
 ## Duplicate audit finding
 
 [`ml/src/incidentiq_ml/data/dedup_audit.py`](../ml/src/incidentiq_ml/data/dedup_audit.py)
