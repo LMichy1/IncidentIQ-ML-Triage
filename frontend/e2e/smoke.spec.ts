@@ -47,7 +47,9 @@ test.describe.serial("incident submission -> prediction -> history flow", () => 
     );
     await page.click('button[type="submit"]');
 
-    await expect(page.getByText("Flagged for human review")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("Flagged for human review", { exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(page.getByText("Undetermined — needs review")).toBeVisible();
   });
 
