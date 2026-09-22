@@ -150,7 +150,7 @@ class ModelRuntime:
             reason = (
                 f"Top two categories are close (margin={margin:.3f} < "
                 f"{LOW_MARGIN_REVIEW_THRESHOLD} heuristic threshold, not a "
-                "validated confidence cutoff) — flagged for human review."
+                "validated confidence cutoff)."
             )
 
         return PredictionResult(
