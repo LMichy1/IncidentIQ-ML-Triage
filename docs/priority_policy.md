@@ -44,9 +44,25 @@ text by a model):
 - Priority output is always advisory; it does not auto-close, auto-assign, or
   auto-escalate anything in M1/M2.
 
-## Explicitly deferred to M2
+## M2 implementation
 
-- The concrete lookup table (impact × urgency → priority).
-- API schema (`PriorityRequest`/`PriorityResponse` Pydantic models).
-- Where in the incident-submission flow impact/urgency are captured (explicit
-  form fields, not inferred).
+Implemented in `backend/app/priority_policy.py` (policy version `0.1.0`).
+
+Impact and urgency are each ranked `low`=1, `medium`=2, `high`=3, `critical`=4.
+Priority is derived from `impact_rank + urgency_rank`:
+
+| Score | Priority |
+|---|---|
+| 7–8 | P1 |
+| 5–6 | P2 |
+| 3–4 | P3 |
+| 2 | P4 |
+
+If `impact` or `urgency` is missing, `None`, or outside the four known
+levels, the result is `undetermined` with a `basis` string explaining why —
+never a guessed score. The API captures `impact`/`urgency` as explicit,
+optional form fields on incident submission (`backend/app/schemas.py`); they
+are never inferred from the free-text title/description.
+
+Every response includes `policy_version`, so a future policy change is
+auditable against historical predictions.
