@@ -11,8 +11,13 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   reporter: "list",
+  // Turbopack dev cold-compiles each route on first request (~15-20s for
+  // the first page in this project) — generous enough to cover that
+  // without masking a genuine hang.
+  expect: { timeout: 25_000 },
   use: {
     baseURL: "http://localhost:3100",
+    navigationTimeout: 30_000,
   },
   webServer: [
     {
