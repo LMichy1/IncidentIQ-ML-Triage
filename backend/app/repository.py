@@ -50,16 +50,31 @@ def get_incident(session: Session, incident_id: str) -> IncidentRecord | None:
     return session.get(IncidentRecord, incident_id)
 
 
+def _apply_review_status_filter(stmt, review_status: str):
+    """pending_review and "does not require review" are different things —
+    only incidents the model actually flagged, and that haven't been
+    reviewed yet, count as pending. reviewed is monotonic (see
+    IncidentRecord.reviewed) so it alone is sufficient for that filter."""
+    if review_status == "pending_review":
+        return stmt.where(
+            IncidentRecord.requires_human_review.is_(True),
+            IncidentRecord.reviewed.is_(False),
+        )
+    if review_status == "reviewed":
+        return stmt.where(IncidentRecord.reviewed.is_(True))
+    return stmt
+
+
 def list_incidents(
-    session: Session, *, limit: int = 50, offset: int = 0
+    session: Session, *, limit: int = 50, offset: int = 0, review_status: str = "all"
 ) -> tuple[list[IncidentRecord], int]:
-    total = session.scalar(select(func.count()).select_from(IncidentRecord)) or 0
-    stmt = (
-        select(IncidentRecord)
-        .order_by(IncidentRecord.created_at.desc())
-        .limit(limit)
-        .offset(offset)
+    count_stmt = _apply_review_status_filter(
+        select(func.count()).select_from(IncidentRecord), review_status
     )
+    total = session.scalar(count_stmt) or 0
+
+    stmt = _apply_review_status_filter(select(IncidentRecord), review_status)
+    stmt = stmt.order_by(IncidentRecord.created_at.desc()).limit(limit).offset(offset)
     items = list(session.scalars(stmt))
     return items, total
 

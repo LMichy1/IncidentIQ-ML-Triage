@@ -79,11 +79,14 @@ export interface IncidentResponse {
   feedback: FeedbackResponse[];
 }
 
+export type ReviewStatusFilter = "all" | "pending_review" | "reviewed";
+
 export interface IncidentListResponse {
   items: IncidentResponse[];
   total: number;
   limit: number;
   offset: number;
+  review_status: ReviewStatusFilter;
 }
 
 export interface ReadinessResponse {
@@ -155,9 +158,10 @@ export function createIncident(payload: IncidentCreate): Promise<IncidentRespons
 export function listIncidents(
   limit = 20,
   offset = 0,
+  reviewStatus: ReviewStatusFilter = "all",
 ): Promise<IncidentListResponse> {
   return request<IncidentListResponse>(
-    `/api/v1/incidents?limit=${limit}&offset=${offset}`,
+    `/api/v1/incidents?limit=${limit}&offset=${offset}&review_status=${reviewStatus}`,
   );
 }
 

@@ -95,11 +95,15 @@ class IncidentResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+ReviewStatusFilter = Literal["all", "pending_review", "reviewed"]
+
+
 class IncidentListResponse(BaseModel):
     items: list[IncidentResponse]
     total: int
     limit: int
     offset: int
+    review_status: ReviewStatusFilter
 
 
 class ErrorResponse(BaseModel):
